@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">RunTrackerSP22</string>
+    <string name="coordinates">Coordinates go here</string>
+    <string name="coordinateDisplay">%1$f|%2$f</string>
+    <string name="permission_required">Location permission is required to display the current location.</string>
+    <string name="ok">OK</string>
+    <string name="open_settings">Open Settings</string>
+    <string name="permission_denied_rationale">The app requires access to the location information to track runs.\nPlease grant access in the settings menu.</string>
+    <string name="permission_granted">Permission is granted. The app can track the location of your run.</string>
+    <string name="nogps">Unable to turn on GPS</string>
+</resources>
