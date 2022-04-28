@@ -1,7 +1,10 @@
 package edu.ivytech.runtrackersp22
 
 import android.Manifest
+import android.app.Activity
+
 import android.content.Intent
+import android.content.IntentSender
 import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
@@ -9,16 +12,23 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.widget.TextView
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationServices
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
+import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import edu.ivytech.runtrackersp22.databinding.ActivityMainBinding
+import java.lang.ClassCastException
 
-
+private const val UPDATE_INTERVAL = 5000L
+private const val FASTEST_UPDATE_INTERVAL = 2000L
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    private lateinit var locationRequest: LocationRequest
+    private lateinit var locationCallback: LocationCallback
+
 
     private val permission = registerForActivityResult(ActivityResultContracts
         .RequestMultiplePermissions()) {
@@ -39,10 +49,39 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private val highAccuracyGPS = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) {
+        result ->
+        when(result.resultCode) {
+            Activity.RESULT_OK -> {
+                Snackbar.make(
+                    binding.root,
+                    "GPS on High Accuracy",
+                    Snackbar.LENGTH_SHORT
+                ).show()
+            }
+            Activity.RESULT_CANCELED -> {
+                Snackbar.make(
+                    binding.root,
+                    "Unable to turn on GPS",
+                    Snackbar.LENGTH_INDEFINITE
+                )
+                    .setAction("Action") { checkGPSAccuracy() }
+                    .show()
+
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        locationRequest = LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+            .setInterval(UPDATE_INTERVAL)
+            .setFastestInterval(FASTEST_UPDATE_INTERVAL)
+
         getLocation()
     }
 
@@ -75,6 +114,7 @@ class MainActivity : AppCompatActivity() {
                 permission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
             }
         }
+        checkGPSAccuracy()
     }
     private fun openSettings() {
         Snackbar.make(binding.root, R.string.permission_denied_rationale, Snackbar.LENGTH_INDEFINITE)
@@ -90,6 +130,35 @@ class MainActivity : AppCompatActivity() {
                     .setLines(6)
             }
             .show()
+    }
+
+    private fun checkGPSAccuracy() {
+        val builder : LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(locationRequest)
+        builder.setAlwaysShow(true)
+        val responseTask : Task<LocationSettingsResponse> = LocationServices.getSettingsClient(this)
+            .checkLocationSettings(builder.build())
+        responseTask.addOnFailureListener{
+            exception ->
+            if(exception is ResolvableApiException) {
+                when(exception.statusCode) {
+                    LocationSettingsStatusCodes.RESOLUTION_REQUIRED -> {
+                        try {
+                            highAccuracyGPS.launch(
+                                IntentSenderRequest.Builder(exception.resolution).build()
+                            )
+                        } catch (e: IntentSender.SendIntentException) {
+
+                        } catch(e: ClassCastException){
+
+                        }
+                    }
+                    LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
+                        Snackbar.make(binding.root, R.string.nogps, Snackbar.LENGTH_INDEFINITE).show()
+                    }
+                }
+            }
+        }
     }
 
 }
