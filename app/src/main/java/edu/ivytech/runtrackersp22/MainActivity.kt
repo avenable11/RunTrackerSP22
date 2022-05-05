@@ -2,9 +2,11 @@ package edu.ivytech.runtrackersp22
 
 import android.Manifest
 import android.app.Activity
+import android.content.Context
 
 import android.content.Intent
 import android.content.IntentSender
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.location.Location
 import android.net.Uri
@@ -21,6 +23,8 @@ import com.google.android.gms.tasks.Task
 import com.google.android.material.snackbar.Snackbar
 import edu.ivytech.runtrackersp22.databinding.ActivityMainBinding
 import java.lang.ClassCastException
+import java.text.NumberFormat
+import java.util.*
 
 private const val UPDATE_INTERVAL = 5000L
 private const val FASTEST_UPDATE_INTERVAL = 2000L
@@ -29,6 +33,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
     private lateinit var locationRequest: LocationRequest
     private lateinit var locationCallback: LocationCallback
+    private lateinit var timer : Timer
+    private lateinit var prefs : SharedPreferences
+    private var startTime = 0L
+    private var elapsedTime = 0L
+    private var stopWatchOn = false
 
 
     private val permission = registerForActivityResult(ActivityResultContracts
@@ -77,6 +86,18 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        prefs = getSharedPreferences("Prefs", Context.MODE_PRIVATE)
+        timer = Timer()
+        binding.buttonStartStop.setOnClickListener {
+            if(stopWatchOn) {
+                stop()
+            } else {
+                start()
+            }
+        }
+        binding.buttonReset.setOnClickListener {
+            reset()
+        }
 
         locationRequest = LocationRequest.create()
             .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
@@ -91,6 +112,63 @@ class MainActivity : AppCompatActivity() {
 
         getLocation()
     }
+
+    private fun reset() {
+        stop()
+        elapsedTime = 0L
+        updateViews(elapsedTime)
+        binding.buttonStartStop.text = getString(R.string.start)
+        LocationRepository.get().deleteLocations()
+    }
+
+    private fun stop() {
+        stopWatchOn = false
+        timer.cancel()
+        binding.buttonStartStop.text = getString(R.string.resume)
+        updateViews(elapsedTime)
+    }
+
+    private fun start() {
+        timer.cancel()
+        if(!stopWatchOn) {
+            startTime = System.currentTimeMillis() - elapsedTime
+        }
+        stopWatchOn = true
+        binding.buttonStartStop.text = getString(R.string.stop)
+
+        val task: TimerTask = object : TimerTask() {
+            override fun run() {
+                elapsedTime = System.currentTimeMillis() - startTime
+                updateViews(elapsedTime)
+            }
+        }
+        timer = Timer(true)
+        timer.scheduleAtFixedRate(task, 0, 100)
+
+    }
+
+    private fun updateViews(elapsedTime: Long) {
+        val elapsedTenths = (elapsedTime/100) % 10
+        val elapsedSecs = (elapsedTime/1000) % 60
+        val elapsedMins = (elapsedTime / (60 * 1000) % 60)
+        val elapsedHours = (elapsedTime / (60 * 60 * 1000))
+        if (elapsedHours > 0) {
+            updateView(binding.textViewHoursValue, elapsedHours, 1);
+        }
+        updateView(binding.textViewMinsValue, elapsedMins, 2);
+        updateView(binding.textViewSecsValue, elapsedSecs, 2);
+        updateView(binding.textViewTenthsValue, elapsedTenths, 1);
+    }
+
+    private fun updateView(textView: TextView, elapsedTime: Long, minDigits: Int) {
+        val numberFormat = NumberFormat.getInstance()
+        numberFormat.minimumIntegerDigits = minDigits
+        textView.post {
+            textView.text = numberFormat.format(elapsedTime)
+        }
+    }
+
+
 
     override fun onStop() {
         fusedLocationProviderClient.removeLocationUpdates(locationCallback)
@@ -173,9 +251,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun onLocationChanged(lastLocation: Location) {
-        binding.coordinatesTextView.text = getString(
-            R.string.coordinateDisplay,
-            lastLocation.latitude, lastLocation.longitude)
+        //binding.coordinatesTextView.text = getString(
+       //     R.string.coordinateDisplay,
+        //    lastLocation.latitude, lastLocation.longitude)
     }
 
 }

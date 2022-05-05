@@ -6,15 +6,108 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/coordinatesTextView"
+    <LinearLayout
+        android:id="@+id/linearLayout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:layout_marginTop="8dp"
-        android:text="@string/coordinates"
-        android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/textViewHoursValue"
+            style="@style/Digit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/zero_value_1" />
+
+        <TextView
+            android:id="@+id/textViewSeparator1"
+            style="@style/Separator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/separator_main" />
+
+        <TextView
+            android:id="@+id/textViewMinsValue"
+            style="@style/Digit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/zero_value_2" />
+
+        <TextView
+            android:id="@+id/textViewSeparator2"
+            style="@style/Separator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/separator_main" />
+
+        <TextView
+            android:id="@+id/textViewSecsValue"
+            style="@style/Digit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/zero_value_2" />
+
+        <TextView
+            android:id="@+id/textViewSeparator3"
+            style="@style/Separator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/separator_tenths" />
+
+        <TextView
+            android:id="@+id/textViewTenthsValue"
+            style="@style/Digit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/zero_value_1" />
+
+    </LinearLayout>
+    <Space
+        android:id="@+id/space"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+    <Button
+        android:id="@+id/buttonReset"
+        style="@style/Button"
+        android:layout_width="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="4dp"
+        android:text="@string/reset"
+        app:layout_constraintEnd_toStartOf="@+id/space"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+
+    <Button
+        android:id="@+id/buttonStartStop"
+        style="@style/Button"
+        android:layout_width="0dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/start"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/space"
+        app:layout_constraintTop_toBottomOf="@+id/space" />
+
+    <Button
+        android:id="@+id/buttonViewMap"
+        style="@style/Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/map"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonReset" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
