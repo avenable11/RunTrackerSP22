@@ -26,18 +26,15 @@ import java.lang.ClassCastException
 import java.text.NumberFormat
 import java.util.*
 
-private const val UPDATE_INTERVAL = 5000L
-private const val FASTEST_UPDATE_INTERVAL = 2000L
+
 class MainActivity : AppCompatActivity() {
     private lateinit var binding : ActivityMainBinding
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationRequest: LocationRequest
-    private lateinit var locationCallback: LocationCallback
     private lateinit var timer : Timer
     private lateinit var prefs : SharedPreferences
     private var startTime = 0L
     private var elapsedTime = 0L
     private var stopWatchOn = false
+    private lateinit var serviceIntent : Intent
 
 
     private val permission = registerForActivityResult(ActivityResultContracts
@@ -48,7 +45,7 @@ class MainActivity : AppCompatActivity() {
             val isGranted = entry.value
             when {
                 isGranted -> {
-                    getLocation()
+                    Log.d("main", "Permission Granted")
                 }
                 !shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> openSettings()
                 else ->  {
@@ -99,18 +96,10 @@ class MainActivity : AppCompatActivity() {
             reset()
         }
 
-        locationRequest = LocationRequest.create()
-            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-            .setInterval(UPDATE_INTERVAL)
-            .setFastestInterval(FASTEST_UPDATE_INTERVAL)
-        locationCallback = object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                super.onLocationResult(locationResult)
-                onLocationChanged(locationResult.lastLocation)
-            }
-        }
 
-        getLocation()
+
+        getLocationPermission()
+        serviceIntent = Intent(this, RunLocationService::class.java)
     }
 
     private fun reset() {
@@ -126,6 +115,7 @@ class MainActivity : AppCompatActivity() {
         timer.cancel()
         binding.buttonStartStop.text = getString(R.string.resume)
         updateViews(elapsedTime)
+        stopService(serviceIntent)
     }
 
     private fun start() {
@@ -144,6 +134,7 @@ class MainActivity : AppCompatActivity() {
         }
         timer = Timer(true)
         timer.scheduleAtFixedRate(task, 0, 100)
+        startService(serviceIntent)
 
     }
 
@@ -170,25 +161,10 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    override fun onStop() {
-        fusedLocationProviderClient.removeLocationUpdates(locationCallback)
-        super.onStop()
-    }
 
-    private fun getLocation() {
+
+    private fun getLocationPermission() {
         when {
-            (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) ==
-                    PackageManager.PERMISSION_GRANTED) -> {
-                fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
-                fusedLocationProviderClient.lastLocation.addOnSuccessListener(this) { location ->
-                    if (location != null) {
-                        onLocationChanged(location)
-
-                    } else {
-                        Log.e("main", "Location is null")
-                    }
-                }
-            }
             shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION) -> {
                 Snackbar.make(binding.root, R.string.permission_required, Snackbar.LENGTH_INDEFINITE)
                     .setAction(R.string.ok) {
@@ -203,7 +179,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         checkGPSAccuracy()
-        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, android.os.Looper.myLooper()!!)
+
     }
     private fun openSettings() {
         Snackbar.make(binding.root, R.string.permission_denied_rationale, Snackbar.LENGTH_INDEFINITE)
@@ -222,6 +198,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkGPSAccuracy() {
+        val locationRequest : LocationRequest = LocationRequest.create()
+            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
         val builder : LocationSettingsRequest.Builder = LocationSettingsRequest.Builder()
             .addLocationRequest(locationRequest)
         builder.setAlwaysShow(true)
@@ -250,10 +228,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun onLocationChanged(lastLocation: Location) {
-        //binding.coordinatesTextView.text = getString(
-       //     R.string.coordinateDisplay,
-        //    lastLocation.latitude, lastLocation.longitude)
-    }
+
 
 }
