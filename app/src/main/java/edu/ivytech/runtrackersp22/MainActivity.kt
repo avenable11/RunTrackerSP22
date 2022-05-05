@@ -95,7 +95,9 @@ class MainActivity : AppCompatActivity() {
         binding.buttonReset.setOnClickListener {
             reset()
         }
-
+        binding.buttonViewMap.setOnClickListener {
+            startActivity(Intent(this@MainActivity,MapsActivity::class.java))
+        }
 
 
         getLocationPermission()

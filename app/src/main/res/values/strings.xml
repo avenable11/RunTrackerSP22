@@ -20,4 +20,5 @@
     <string name="stopwatch">View Stopwatch</string>
     <string name="resume">Resume</string>
     <string name="notification_channel_name">RunTracker</string>
+    <string name="title_activity_maps">MapsActivity</string>
 </resources>
